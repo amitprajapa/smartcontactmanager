@@ -1,13 +1,11 @@
-# Build Stage
-FROM maven:3.8.3-openjdk-17 AS build
-WORKDIR /app
-COPY . /app/
-RUN mvn clean package
+FROM maven:3.9.2-eclipse-temurin-17-alpine as builder
 
-# Package Stage
-FROM openjdk:17-alpine
-WORKDIR /app
-# Modify the COPY command to point to the correct directory where the JAR is generated
-COPY --from=build /app/target/*.jar /app/app.jar
+COPY ./src src/
+COPY ./pom.xml pom.xml
+
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:17-jre-alpine
+COPY --from=builder target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["java","-jar","app.jar"]
